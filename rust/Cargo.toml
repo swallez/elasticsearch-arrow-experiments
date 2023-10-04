@@ -1,0 +1,23 @@
+[package]
+name = "arrow-esql"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+arrow = "46.0.0"
+arrow-flight = "46.0.0"
+arrow-ipc = "46.0.0"
+tonic = "*"
+anyhow = "1.0.75"
+tokio = { version = "1.32.0", features = ["macros", "rt"] }
+futures-util = "0.3.28"
+
+configparser = "3.0.2"
+base64 = "0.21.4"
+
+#polars = { version = "0.33", features = ["streaming","lazy", "ipc", "ipc_streaming"] }
+#arrow2 = { version = "*", features = ["arrow"]}
+
+#arrow-format = { version = "0.8.1", features = ["flight-service"] }
