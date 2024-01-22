@@ -36,6 +36,8 @@ async fn main() -> anyhow::Result<()>{
         println!("{:?}", batch);
     }
 
+    Vec::<i32>::new().sort();
+
     Ok(())
 }
 

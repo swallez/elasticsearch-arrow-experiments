@@ -1,5 +1,6 @@
 package co.elastic.es_flight.server;
 
+import co.elastic.es_flight.esql.ESQLArrowResponse;
 import co.elastic.es_flight.esql.ESQLQuery;
 import co.elastic.es_flight.esql.ESQLResponse;
 import co.elastic.es_flight.client.ESFlightTestClient;
@@ -19,6 +20,7 @@ import org.apache.arrow.flight.NoOpFlightProducer;
 import org.apache.arrow.flight.RequestContext;
 import org.apache.arrow.flight.Ticket;
 import org.apache.arrow.memory.BufferAllocator;
+import org.apache.arrow.memory.DefaultAllocationManagerFactory;
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.commons.configuration2.INIConfiguration;
 
@@ -62,7 +64,8 @@ public class ESFlightServer implements AutoCloseable {
         server.start();
         System.out.println("Started");
 
-        ESFlightTestClient.main(null);
+        // All in one test: run the client
+        // ESFlightTestClient.main(null);
 
         // Wait forever
         new CompletableFuture<Void>().get();
@@ -83,7 +86,9 @@ public class ESFlightServer implements AutoCloseable {
 
         this.esUrl = esUrl;
 
-        this.allocator = new RootAllocator();
+        this.allocator = new RootAllocator(RootAllocator.configBuilder()
+            .allocationManagerFactory(DefaultAllocationManagerFactory.FACTORY)
+            .build());
 
         var producer = new Producer();
 
@@ -145,7 +150,7 @@ public class ESFlightServer implements AutoCloseable {
 
             try {
                 // Prepare the http request
-                var esqlQuery = new ESQLQuery(query);
+                var esqlQuery = new ESQLQuery(query, true);
                 byte[] bytes = mapper.writeValueAsBytes(esqlQuery);
 
                 HttpRequest request = HttpRequest
@@ -165,9 +170,8 @@ public class ESFlightServer implements AutoCloseable {
 
                 ESQLResponse esqlResponse = mapper.readValue(response.body(), ESQLResponse.class);
 
-                // Convert to Arrow
-                esqlResponse.toArrow(allocator, listener);
-
+                // Write the Arrow conversion to the response listener
+                ESQLArrowResponse.sendFlightResponse(esqlResponse, allocator, listener);
 
             } catch (Exception e) {
                 e.printStackTrace();
